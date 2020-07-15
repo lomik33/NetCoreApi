@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using NetCoreApi.Models;
 using NetCoreApi.Models.Request;
+using NetCoreApi.Utils;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -54,14 +55,25 @@ namespace NetCoreApi.Controllers
         public async Task<bool> RegisterAsync(RegistrarUsuarioRequest request)
         {
             if (request == null) return false;
-
+            //Regla 1: Se deberá validad que no exista otro usuario con los mismos datos.
             if (_context.Set<ApplicationUser>().FirstOrDefault(x => x.UserName.Equals(request.Username)) != null) throw new Exception("El nombre de usuario ya esta siendo usado por otro usuario.");
+            if(!string.IsNullOrEmpty(request.Email) && !RegexUtils.IsValidEmail(request.Email))            
+                throw new Exception("Correo electrónico no valído.");
+            //Regla 2: La contraseña se deberá validar que coincida en dos campos.
+            if (!request.Password.Equals(request.PasswordRetype))
+                throw new Exception("Contraseña no coincide.");
+
+
             var user = new ApplicationUser
             {
                 UserName = request.Username,
                 Email = request.Email,
                 FechaCreacion = DateTime.Now, /*Creación*/
             };
+            ///Regla 3: La contraseña deberá estar encriptada.
+            ///Identity usa un algoritmo para encriptar las contraseñas
+            //Regla 4: El id deberá ser generado automáticamente por la tabla de SQL.
+            //Identity autogenera las pwd como GUID
             var result = await _userManager.CreateAsync(user, request.Password);
             if (result.Succeeded)
             {
@@ -72,6 +84,10 @@ namespace NetCoreApi.Controllers
             return false;
         }
 
+        /// <summary>
+        /// Consulta de todos los usuarios
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         public IEnumerable<ApplicationUser> GetAll()
         {
@@ -92,6 +108,9 @@ namespace NetCoreApi.Controllers
             var user = _context.Set<ApplicationUser>().FirstOrDefault(x => x.UserName.Equals(userName));
             if (user != null)
             {
+                if (!string.IsNullOrEmpty(request.Email) && !RegexUtils.IsValidEmail(request.Email))
+                    throw new Exception("Correo electrónico no valído.");
+
                 user.Email = request.Email;
                 user.Sexo = request.Gender;
                 IdentityResult result = null;
@@ -102,16 +121,21 @@ namespace NetCoreApi.Controllers
             return centinela;
         }
 
-
+        /// <summary>
+        /// Desactiva al usuario
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <returns></returns>
         [HttpDelete]
         public async Task<bool> DeleteAsync(string userName)
         {
+            //Regla 5: La acción eliminar solo inactiva los usuarios.
             bool centinela = false;
             var user = _context.Set<ApplicationUser>().FirstOrDefault(x => x.UserName.Equals(userName));
             if (user != null)
             {
-                user.LockoutEnabled = true;
-                centinela = await _context.SaveChangesAsync() > 0;
+                var result= await _userManager.SetLockoutEnabledAsync(user, true);
+                centinela = result.Succeeded;
             }
             return centinela;
         }

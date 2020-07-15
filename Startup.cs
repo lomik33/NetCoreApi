@@ -64,7 +64,7 @@ namespace NetCoreApi
             });
 
             services.AddControllers();
-
+            /*Reglas solicitadas respecto a la contraseñas*/
             services.Configure<IdentityOptions>(options =>
             {
                 // Password settings
