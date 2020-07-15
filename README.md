@@ -9,13 +9,14 @@ En la clase Startup se especifican reglas respecto a las frotalezas solicitadas 
 ##Servicios backend
 * Login: En controlador ApplicationUserController verbo http:POST
 	EndPoint: http://localhost:51158/ApplicationUser/Login
-*Alta de Usuarios ApplicationUserController verbo http:POST
+* Alta de Usuarios ApplicationUserController verbo http:POST
 	EndPoint: http://localhost:51158/ApplicationUser
-*Actualizacion de Usuarios ApplicationUserController verbo http:PUT
+* Actualizacion de Usuarios ApplicationUserController verbo http:PUT
 	EndPoint: http://localhost:51158/ApplicationUser
-*Alta de Usuarios ApplicationUserController verbo http:DELETE
+* Alta de Usuarios ApplicationUserController verbo http:DELETE
 	EndPoint: http://localhost:51158/ApplicationUser
-*Consulta de Usuarios ApplicationUserController verbo http:GET
+* Consulta de Usuarios ApplicationUserController verbo http:GET
 	EndPoint: http://localhost:51158/ApplicationUser
 
 Nota: En la carpeta Evidencias/Invocación se muestran screen de su ejecución
+Fecha de modificación: 15/07/2020
