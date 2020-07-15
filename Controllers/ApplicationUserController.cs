@@ -1,0 +1,166 @@
+﻿using App_NetCore.Data;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using NetCoreApi.Models;
+using NetCoreApi.Models.Request;
+using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Security.Claims;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace NetCoreApi.Controllers
+{
+    [ApiController]
+    [Route("ApplicationUser")]
+    public class ApplicationUserController : Controller
+    {
+        private readonly ILogger<ApplicationUserController> _logger;
+        private readonly ApplicationDbContext _context;
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IConfiguration _configuration;
+
+
+        /// <summary>
+        /// Constructor por inyección de dependencias
+        /// </summary>
+        /// <param name="logger"></param>
+        /// <param name="context"></param>
+        /// <param name="userManager"></param>
+        /// <param name="signInManager"></param>
+        public ApplicationUserController(ILogger<ApplicationUserController> logger, ApplicationDbContext context, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IConfiguration configuration)
+        {
+            _logger = logger;
+            _context = context;
+            _userManager = userManager;
+            _signInManager = signInManager;
+            _configuration = configuration;
+        }
+
+
+
+        /// <summary>
+        /// Registra un usuario
+        /// </summary>
+        /// <param name="registerAccountViewModels"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public async Task<bool> RegisterAsync(RegistrarUsuarioRequest request)
+        {
+            if (request == null) return false;
+
+            if (_context.Set<ApplicationUser>().FirstOrDefault(x => x.UserName.Equals(request.Username)) != null) throw new Exception("El nombre de usuario ya esta siendo usado por otro usuario.");
+            var user = new ApplicationUser
+            {
+                UserName = request.Username,
+                Email = request.Email,
+                FechaCreacion = DateTime.Now, /*Creación*/
+            };
+            var result = await _userManager.CreateAsync(user, request.Password);
+            if (result.Succeeded)
+            {
+                return true;
+            }
+            if (result.Errors != null)
+                throw new Exception(string.Join(", ", result.Errors));
+            return false;
+        }
+
+        [HttpGet]
+        public IEnumerable<ApplicationUser> GetAll()
+        {
+            return _context.Set<ApplicationUser>().ToList();
+        }
+
+        /// <summary>
+        /// Servicio que actualiza la información de un usuario, en caso de querer actualziar la contraseña
+        ///     es necesaria la contraseña actual y nueva.
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPut]
+        public async Task<bool> EditAsync(string userName, EditarUsuarioRequest request)
+        {
+            bool centinela = false;
+            var user = _context.Set<ApplicationUser>().FirstOrDefault(x => x.UserName.Equals(userName));
+            if (user != null)
+            {
+                user.Email = request.Email;
+                user.Sexo = request.Gender;
+                IdentityResult result = null;
+                if (!string.IsNullOrEmpty(request.CurrentPassword) && !string.IsNullOrEmpty(request.NewPassword))
+                    result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+                centinela = await _context.SaveChangesAsync() > 0 || result.Succeeded;
+            }
+            return centinela;
+        }
+
+
+        [HttpDelete]
+        public async Task<bool> DeleteAsync(string userName)
+        {
+            bool centinela = false;
+            var user = _context.Set<ApplicationUser>().FirstOrDefault(x => x.UserName.Equals(userName));
+            if (user != null)
+            {
+                user.LockoutEnabled = true;
+                centinela = await _context.SaveChangesAsync() > 0;
+            }
+            return centinela;
+        }
+
+        /// <summary>
+        /// Servicio de inicio de sesión implementado con JWT
+        /// En caso de devolver token el inicio de sesión es satisfactorio.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("Login")]
+        public async Task<string> LoginAsync(LoginRequest request)
+        {
+            string centinela = string.Empty;
+            // Tu código para validar que el usuario ingresado es válido
+
+            // Asumamos que tenemos un usuario válido
+            var result = await _signInManager.PasswordSignInAsync(request.Username, request.Password, request.Rememberme, true);
+            if (result.Succeeded)
+            {
+
+
+                // Leemos el secret_key desde nuestro appseting
+                var secretKey = _configuration.GetValue<string>("SecretKey");
+                var key = Encoding.ASCII.GetBytes(secretKey);
+
+                // Creamos los claims (pertenencias, características) del usuario
+                var claims = new[]
+                {
+                new Claim(ClaimTypes.NameIdentifier, request.Username),
+                new Claim(ClaimTypes.Email, request.Username)
+            };
+
+                var tokenDescriptor = new SecurityTokenDescriptor
+                {
+                    Subject = new ClaimsIdentity(claims),
+                    // Nuestro token va a durar un día
+                    Expires = DateTime.UtcNow.AddDays(1),
+                    // Credenciales para generar el token usando nuestro secretykey y el algoritmo hash 256
+                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                };
+
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var createdToken = tokenHandler.CreateToken(tokenDescriptor);
+
+                centinela = tokenHandler.WriteToken(createdToken);
+            }
+            return centinela;
+        }
+    }
+}
