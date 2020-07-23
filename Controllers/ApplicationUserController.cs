@@ -1,4 +1,6 @@
 ﻿using App_NetCore.Data;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -89,6 +91,7 @@ namespace NetCoreApi.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
+        [Authorize]
         public IEnumerable<ApplicationUser> GetAll()
         {
             return _context.Set<ApplicationUser>().ToList();
@@ -174,7 +177,7 @@ namespace NetCoreApi.Controllers
                 {
                     Subject = new ClaimsIdentity(claims),
                     // Nuestro token va a durar un día
-                    Expires = DateTime.UtcNow.AddDays(1),
+                    Expires = DateTime.UtcNow.AddMinutes(3),
                     // Credenciales para generar el token usando nuestro secretykey y el algoritmo hash 256
                     SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
                 };
@@ -184,7 +187,18 @@ namespace NetCoreApi.Controllers
 
                 centinela = tokenHandler.WriteToken(createdToken);
             }
+            Response.Cookies.Append("refreshToken", RefreshToken.GenerateRefreshToken(ipAddress()).Token, new CookieOptions(){
+                HttpOnly = true,
+                Expires = DateTime.UtcNow.AddDays(7)
+            });
             return centinela;
+        }
+        private string ipAddress(){
+            if (Request.Headers.ContainsKey("X-Forwarded-For"))
+            return Request.Headers["X-Forwarded-For"];
+            return HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString();
+
+
         }
     }
 }

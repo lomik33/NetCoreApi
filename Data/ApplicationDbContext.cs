@@ -18,5 +18,9 @@ namespace App_NetCore.Data
             IOptions<OperationalStoreOptions> operationalStoreOptions) : base(options, operationalStoreOptions)
         {
         }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder builder){
+
+        }
     }
 }
