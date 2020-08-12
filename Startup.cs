@@ -32,6 +32,9 @@ namespace NetCoreApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options => options.AddPolicy("AllowAnyOrigins", builder => {
+                builder.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin();
+            }));
             services.AddDbContext<ApplicationDbContext>(options => options.UseMySql(Configuration.GetConnectionString("DefaultConnection")));
             // services.AddDbContext<ApplicationDbContext>(options =>
             //  options.UseSqlServer(
@@ -64,7 +67,7 @@ namespace NetCoreApi
                 };
             });
 
-            services.AddControllers();
+            services.AddControllers().AddJsonOptions(opt => opt.JsonSerializerOptions.PropertyNamingPolicy = null);
             /*Reglas solicitadas respecto a la contrase�as*/
             services.Configure<IdentityOptions>(options =>
             {
@@ -84,6 +87,7 @@ namespace NetCoreApi
             {
                 app.UseDeveloperExceptionPage();
             }
+            app.UseCors("AllowAnyOrigins");
 
             app.UseRouting();
 
@@ -95,10 +99,11 @@ namespace NetCoreApi
             {
                 endpoints.MapControllers();
             });
-            using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope()){
-                var context = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                context.Database.EnsureCreated();
-            }
+            
+            // using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope()){
+            //     var context = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            //     context.Database.EnsureCreated();
+            // }
         }
     }
 }

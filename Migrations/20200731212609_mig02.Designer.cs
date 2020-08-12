@@ -3,14 +3,16 @@ using System;
 using App_NetCore.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace NetCoreApi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20200731212609_mig02")]
+    partial class mig02
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -299,30 +301,6 @@ namespace NetCoreApi.Migrations
                         .HasName("UserNameIndex");
 
                     b.ToTable("AspNetUsers");
-                });
-
-            modelBuilder.Entity("NetCoreApi.Models.Comida", b =>
-                {
-                    b.Property<Guid>("ComidaId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("DescripcionComida")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
-
-                    b.Property<string>("NombreComida")
-                        .IsRequired()
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
-
-                    b.Property<decimal>("PrecioComida")
-                        .HasColumnType("decimal(18, 2)");
-
-                    b.Property<int>("TipoComida")
-                        .HasColumnType("int");
-
-                    b.HasKey("ComidaId");
-
-                    b.ToTable("Comida");
                 });
 
             modelBuilder.Entity("NetCoreApi.Models.RefreshToken", b =>

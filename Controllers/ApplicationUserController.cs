@@ -13,9 +13,12 @@ using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Net.Http;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using DevExtreme.AspNet.Data;
+using System.Net.Http;
 
 namespace NetCoreApi.Controllers
 {
@@ -91,10 +94,13 @@ namespace NetCoreApi.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
+        [Route("GetAll")]
         [Authorize]
-        public IEnumerable<ApplicationUser> GetAll()
+        public IActionResult GetAll(DataSourceLoadOptions options)
         {
-            return _context.Set<ApplicationUser>().ToList();
+            //return _context.Set<ApplicationUser>().ToList();
+            return Ok(DataSourceLoader.Load(_context.Set<ApplicationUser>(), options));
+            //return _context.Set<ApplicationUser>().ToList();
         }
 
         /// <summary>
@@ -177,7 +183,7 @@ namespace NetCoreApi.Controllers
                 {
                     Subject = new ClaimsIdentity(claims),
                     // Nuestro token va a durar un día
-                    Expires = DateTime.UtcNow.AddMinutes(3),
+                    Expires = DateTime.UtcNow.AddMinutes(2),
                     // Credenciales para generar el token usando nuestro secretykey y el algoritmo hash 256
                     SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
                 };
@@ -187,11 +193,70 @@ namespace NetCoreApi.Controllers
 
                 centinela = tokenHandler.WriteToken(createdToken);
             }
-            Response.Cookies.Append("refreshToken", RefreshToken.GenerateRefreshToken(ipAddress()).Token, new CookieOptions(){
+            //Se elabora el proceso de refresh token si se elige rememberme
+            if (request.Rememberme){
+                          var rToken = RefreshToken.GenerateRefreshToken(ipAddress());
+            var userModify = _context.Set<ApplicationUser>().FirstOrDefault(a => a.UserName == request.Username);
+            rToken.UserId = userModify.Id;
+            userModify.RefreshTokens.Add(rToken);
+            _context.Update(userModify);
+            _context.SaveChanges();
+
+            Response.Cookies.Append("refreshToken", rToken.Token, new CookieOptions(){
                 HttpOnly = true,
                 Expires = DateTime.UtcNow.AddDays(7)
             });
+
+            }
+  
             return centinela;
+        }
+        [HttpPost]
+        [Route("refresh-token")]
+        public IActionResult RefreshTokenRequest(){
+            var refreshToken = Request.Cookies["refreshToken"];
+            var response = RefreshToken.Refresh(ipAddress(), refreshToken, _context, out var user);
+            if (response == null) return Unauthorized(new {Mensaje = "Token Inválido"});
+
+            var secretKey = _configuration.GetValue<string>("SecretKey");
+                var key = Encoding.ASCII.GetBytes(secretKey);
+
+                // Creamos los claims (pertenencias, características) del usuario
+                var claims = new[]
+                {
+                new Claim(ClaimTypes.NameIdentifier, user.UserName),
+                new Claim(ClaimTypes.Email, user.UserName)
+            };
+
+                var tokenDescriptor = new SecurityTokenDescriptor
+                {
+                    Subject = new ClaimsIdentity(claims),
+                    // Nuestro token va a durar un día
+                    Expires = DateTime.UtcNow.AddMinutes(2),
+                    // Credenciales para generar el token usando nuestro secretykey y el algoritmo hash 256
+                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                };
+
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var createdToken = tokenHandler.CreateToken(tokenDescriptor);
+
+                var centinela = tokenHandler.WriteToken(createdToken);
+
+
+            Response.Cookies.Append("refreshToken", response.Token, new CookieOptions(){
+                HttpOnly = true,
+                Expires = DateTime.UtcNow.AddDays(7)
+            });
+            return Ok(new {Jwt = centinela});
+        }
+        [HttpGet]
+        [Route("GetGeneros")]
+        [Authorize]
+        public IActionResult GetGeneros(DataSourceLoadOptions options){
+            return Ok(DataSourceLoader.Load(Enum.GetValues(typeof(Genero)).Cast<Genero>().Select(g => new SelectListUtil<int>(){
+                name = g.ToString(),
+                value = (int) g
+            }), options));
         }
         private string ipAddress(){
             if (Request.Headers.ContainsKey("X-Forwarded-For"))

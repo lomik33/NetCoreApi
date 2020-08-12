@@ -22,5 +22,12 @@ namespace App_NetCore.Data
         protected override void OnConfiguring(DbContextOptionsBuilder builder){
 
         }
+
+        protected override void OnModelCreating(ModelBuilder builder){
+            builder.ApplyConfiguration(new RefreshTokenConfiguration());
+            builder.ApplyConfiguration(new UnidadMedidaConfiguration());
+            builder.ApplyConfiguration(new ComidaConfiguration());
+            base.OnModelCreating(builder);
+        }
     }
 }

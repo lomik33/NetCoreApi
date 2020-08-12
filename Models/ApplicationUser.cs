@@ -13,12 +13,13 @@ namespace NetCoreApi.Models
     public class ApplicationUser : IdentityUser
     {
         public ApplicationUser(){
+            RefreshTokens = new List<RefreshToken>();
 
         }
         public Genero Sexo { get; set; }
         public DateTime FechaCreacion { get; set; }
 
-        public ICollection<RefreshToken> RefreshTokens {get; set;}
+        public virtual ICollection<RefreshToken> RefreshTokens {get; set;}
 
     }
 }

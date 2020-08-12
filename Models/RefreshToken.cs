@@ -1,7 +1,9 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text.Json.Serialization;
+using App_NetCore.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace NetCoreApi.Models{
@@ -32,6 +34,22 @@ namespace NetCoreApi.Models{
                     CreatedByIp = ipAddress
                 };
             }
+        }
+
+        public static RefreshToken Refresh(string ipAddress, string token, ApplicationDbContext context, out ApplicationUser user){
+            user = context.Set<ApplicationUser>().Include(e => e.RefreshTokens).FirstOrDefault(s => s.RefreshTokens.Any(t => t.Token == token));
+            if (user == null) return null;
+            var RefreshToken = user.RefreshTokens.FirstOrDefault(x => x.Token == token);
+            if (!RefreshToken.IsActive) return null;
+            var newRefreshToken = GenerateRefreshToken(ipAddress);
+            RefreshToken.Revoked = DateTime.UtcNow;
+            RefreshToken.RevokedByIp = ipAddress;
+            RefreshToken.ReplacedByToken = newRefreshToken.Token;
+            user.RefreshTokens.Add(newRefreshToken);
+            context.Update(user);
+            context.SaveChanges();
+            return newRefreshToken;
+
         }
     }
 
