@@ -5,6 +5,10 @@ VisualStudioVersion = 16.0.29926.136
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetCoreApi", "NetCoreApi.csproj", "{5D8038B0-FA28-42FB-A65D-3523663BC6E8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PruebaClonarObjeto", "..\PruebaClonarObjeto\PruebaClonarObjeto.csproj", "{89C249C8-75F1-4088-9731-27068A7318EF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmpleadoDefinicion", "..\EmpleadoDefinicion\EmpleadoDefinicion.csproj", "{4196D53A-9262-4741-9CE4-3B2CB2934EF2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{5D8038B0-FA28-42FB-A65D-3523663BC6E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5D8038B0-FA28-42FB-A65D-3523663BC6E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5D8038B0-FA28-42FB-A65D-3523663BC6E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89C249C8-75F1-4088-9731-27068A7318EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89C249C8-75F1-4088-9731-27068A7318EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89C249C8-75F1-4088-9731-27068A7318EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89C249C8-75F1-4088-9731-27068A7318EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4196D53A-9262-4741-9CE4-3B2CB2934EF2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4196D53A-9262-4741-9CE4-3B2CB2934EF2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4196D53A-9262-4741-9CE4-3B2CB2934EF2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4196D53A-9262-4741-9CE4-3B2CB2934EF2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

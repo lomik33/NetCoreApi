@@ -14,7 +14,7 @@ using System.IO;
 
 namespace NetCoreApi.Controllers{
     [ApiController]
-    [Authorize]
+    //[Authorize]
     [Route("UnidadMedida")]
     public class UnidadMedidaController : Controller{
                 private readonly ApplicationDbContext _context;

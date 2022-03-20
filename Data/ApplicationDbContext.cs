@@ -1,4 +1,5 @@
 ﻿
+using EmpleadoDefinicion.Interfaces;
 using IdentityServer4.EntityFramework.Options;
 using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
 using Microsoft.EntityFrameworkCore;
@@ -27,7 +28,31 @@ namespace App_NetCore.Data
             builder.ApplyConfiguration(new RefreshTokenConfiguration());
             builder.ApplyConfiguration(new UnidadMedidaConfiguration());
             builder.ApplyConfiguration(new ComidaConfiguration());
+            builder.ApplyConfiguration(new EmpleadoConfiguration());
+            builder.ApplyConfiguration(new InformacionContratoConfiguration());
             base.OnModelCreating(builder);
+        }
+        public override int SaveChanges(){
+            foreach (var entry in ChangeTracker.Entries()){
+                                    DateTime ahora = DateTime.UtcNow;
+                if (entry.Entity is IDateObserver){
+                    switch (entry.State){
+                        case EntityState.Added:
+                        ((IDateObserver)entry.Entity).CreatedAt = ahora;
+                        break;
+                        case EntityState.Modified:
+                                                ((IDateObserver)entry.Entity).ModifiedAt = ahora;
+                        break;
+                    }
+                }
+                if (entry.Entity is ISoftDelete){
+                    if (entry.State == EntityState.Deleted){
+                                                ((ISoftDelete)entry.Entity).IsDeleted = true;
+                                                ((ISoftDelete)entry.Entity).DateDeleted= ahora;
+                    }
+                }
+            }
+            return base.SaveChanges();
         }
     }
 }

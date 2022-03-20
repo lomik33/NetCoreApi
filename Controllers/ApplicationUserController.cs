@@ -18,7 +18,6 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using DevExtreme.AspNet.Data;
-using System.Net.Http;
 
 namespace NetCoreApi.Controllers
 {
@@ -251,12 +250,12 @@ namespace NetCoreApi.Controllers
         }
         [HttpGet]
         [Route("GetGeneros")]
-        [Authorize]
-        public IActionResult GetGeneros(DataSourceLoadOptions options){
-            return Ok(DataSourceLoader.Load(Enum.GetValues(typeof(Genero)).Cast<Genero>().Select(g => new SelectListUtil<int>(){
+        //[Authorize]
+        public IActionResult GetGeneros(){
+            return Ok(Enum.GetValues(typeof(Genero)).Cast<Genero>().Select(g => new SelectListUtil<int>(){
                 name = g.ToString(),
                 value = (int) g
-            }), options));
+            }));
         }
         private string ipAddress(){
             if (Request.Headers.ContainsKey("X-Forwarded-For"))

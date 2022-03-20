@@ -13,8 +13,9 @@ namespace NetCoreApi.Models{
                 var oldProperty = oldProperties.FirstOrDefault(x => x.Name == newProperty.Name);
                 if (oldProperty == null) continue;
                 if (newProperty.GetValue(newEntity) is Guid g && g.Equals(Guid.Empty)) continue;
-                if (oldProperty.GetValue(oldEntity)?.ToString() == newProperty.GetValue(newEntity)?.ToString()) continue;
-                ChangeLog<TEntity> change = new ChangeLog<TEntity>(){
+                //if (oldProperty.GetValue(oldEntity)?.ToString() == newProperty.GetValue(newEntity)?.ToString()) continue;
+                if (oldProperty.GetValue(oldEntity).Equals(newProperty.GetValue(newEntity))) continue;
+                                ChangeLog<TEntity> change = new ChangeLog<TEntity>(){
                     PropertyName = newProperty.Name,
                     NewValue = newProperty.GetValue(newEntity),
                     OldValue = oldProperty.GetValue(oldEntity),
